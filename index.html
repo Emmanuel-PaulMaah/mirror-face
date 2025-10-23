@@ -65,6 +65,9 @@
       <div id="ui">
         <div><b>MediaPipe ARKit Tracking</b></div>
         <button id="demoBtn">Load Demo Avatar</button>
+        <label>Or load from URL</label>
+        <input type="text" id="urlInput" placeholder="https://example.com/model.glb" style="width:100%;padding:8px;background:#0f0f0f;border:1px solid #333;color:#ddd;border-radius:6px;font-size:13px" />
+        <button id="urlBtn">Load from URL</button>
         <label>Or upload your own GLB/GLTF</label>
         <input type="file" id="file" accept=".glb,.gltf" />
         <label>Detected morph target keys</label>
@@ -237,6 +240,16 @@
     // Demo button handler
     document.getElementById('demoBtn').addEventListener('click', async ()=>{
       await loadModel('demo-avatar.glb', false);
+    });
+
+    // URL button handler
+    document.getElementById('urlBtn').addEventListener('click', async ()=>{
+      const url = document.getElementById('urlInput').value.trim();
+      if(!url) {
+        statusEl.innerHTML = '<span class="err">Please enter a URL.</span>';
+        return;
+      }
+      await loadModel(url, false);
     });
 
     // File upload handler
