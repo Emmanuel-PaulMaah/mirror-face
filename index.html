@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Full Body Mirror Tracking (Face + Body + Hands)</title>
+  <title>Face → MorphTargets (Native ARKit Blendshapes)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html,body{margin:0;height:100%;background:#111;color:#ddd;font:14px system-ui}
@@ -28,12 +28,12 @@
 
     <div class="sidebar">
       <div id="ui">
-        <div><b>Full Body Mirror Tracking</b></div>
-        <label>Upload GLB/GLTF (rigged character with skeleton)</label>
+        <div><b>MediaPipe ARKit Tracking</b></div>
+        <label>Upload GLB/GLTF (with morph targets)</label>
         <input type="file" id="file" accept=".glb,.gltf" />
         <label>Detected morph target keys</label>
         <div id="morphKeys"></div>
-        <div class="info">✨ MediaPipe Face (52 ARKit blendshapes) + Pose (body) + Hands tracking!</div>
+        <div class="info">✨ Using MediaPipe's native 52 ARKit blendshapes + proper neck/head hierarchy!</div>
         <div id="status">Waiting for model…</div>
       </div>
 
@@ -182,9 +182,6 @@
           headRest: headRestQuat
         });
 
-        // Find body bones for pose tracking
-        bodyBones = findBodyBones(gltf.scene);
-
         if(morphRefs.length===0){ 
           statusEl.innerHTML = '<span class="err">No morph targets found.</span>'; 
           return; 
@@ -200,130 +197,23 @@
       finally{ URL.revokeObjectURL(url); }
     });
 
-    // Store body bone references and rest poses
-    let bodyBones = {};
-    
-    function findBodyBones(root) {
-      const bones = {};
-      
-      root.traverse(o => {
-        if(o.isBone || o.isObject3D) {
-          const name = o.name.toLowerCase();
-          
-          // Helper to create bone entry with rest direction
-          const createBoneEntry = (node) => {
-            const entry = { 
-              node: node, 
-              rest: node.quaternion.clone(),
-              restDir: null  // Will store child direction in world space
-            };
-            
-            // Find child bone to determine rest direction
-            if (node.children && node.children.length > 0) {
-              const child = node.children.find(c => c.isBone || c.isObject3D);
-              if (child) {
-                // Get direction from this bone to child in world space
-                const worldPos = new THREE.Vector3();
-                const childWorldPos = new THREE.Vector3();
-                node.getWorldPosition(worldPos);
-                child.getWorldPosition(childWorldPos);
-                
-                entry.restDir = {
-                  x: childWorldPos.x - worldPos.x,
-                  y: childWorldPos.y - worldPos.y,
-                  z: childWorldPos.z - worldPos.z
-                };
-              }
-            }
-            
-            // Fallback: use default Y-axis if no child found
-            if (!entry.restDir) {
-              entry.restDir = {x: 0, y: 1, z: 0};
-            }
-            
-            return entry;
-          };
-          
-          // Spine/torso
-          if (!bones.spine && (/spine|torso/i.test(o.name) && !/spine.*3|neck/i.test(o.name))) {
-            bones.spine = createBoneEntry(o);
-          }
-          
-          // Shoulders
-          if (!bones.leftShoulder && (/left.*shoulder|shoulder.*left|l.*clavicle/i.test(o.name))) {
-            bones.leftShoulder = createBoneEntry(o);
-          }
-          if (!bones.rightShoulder && (/right.*shoulder|shoulder.*right|r.*clavicle/i.test(o.name))) {
-            bones.rightShoulder = createBoneEntry(o);
-          }
-          
-          // Upper arms
-          if (!bones.leftUpperArm && (/left.*arm|arm.*left|l.*upper.*arm|upper.*arm.*left/i.test(o.name) && !/lower|forearm/i.test(o.name))) {
-            bones.leftUpperArm = createBoneEntry(o);
-          }
-          if (!bones.rightUpperArm && (/right.*arm|arm.*right|r.*upper.*arm|upper.*arm.*right/i.test(o.name) && !/lower|forearm/i.test(o.name))) {
-            bones.rightUpperArm = createBoneEntry(o);
-          }
-          
-          // Lower arms
-          if (!bones.leftLowerArm && (/left.*forearm|forearm.*left|l.*lower.*arm|lower.*arm.*left/i.test(o.name))) {
-            bones.leftLowerArm = createBoneEntry(o);
-          }
-          if (!bones.rightLowerArm && (/right.*forearm|forearm.*right|r.*lower.*arm|lower.*arm.*right/i.test(o.name))) {
-            bones.rightLowerArm = createBoneEntry(o);
-          }
-          
-          // Hands
-          if (!bones.leftHand && (/left.*hand|hand.*left|l.*wrist/i.test(o.name))) {
-            bones.leftHand = createBoneEntry(o);
-          }
-          if (!bones.rightHand && (/right.*hand|hand.*right|r.*wrist/i.test(o.name))) {
-            bones.rightHand = createBoneEntry(o);
-          }
-          
-          // Hips
-          if (!bones.hips && (/hips|pelvis|root/i.test(o.name))) {
-            bones.hips = createBoneEntry(o);
-          }
-          
-          // Legs
-          if (!bones.leftUpperLeg && (/left.*thigh|thigh.*left|l.*upper.*leg|upper.*leg.*left/i.test(o.name))) {
-            bones.leftUpperLeg = createBoneEntry(o);
-          }
-          if (!bones.rightUpperLeg && (/right.*thigh|thigh.*right|r.*upper.*leg|upper.*leg.*right/i.test(o.name))) {
-            bones.rightUpperLeg = createBoneEntry(o);
-          }
-          if (!bones.leftLowerLeg && (/left.*shin|shin.*left|l.*lower.*leg|lower.*leg.*left|left.*calf/i.test(o.name))) {
-            bones.leftLowerLeg = createBoneEntry(o);
-          }
-          if (!bones.rightLowerLeg && (/right.*shin|shin.*right|r.*lower.*leg|lower.*leg.*right|right.*calf/i.test(o.name))) {
-            bones.rightLowerLeg = createBoneEntry(o);
-          }
-        }
-      });
-      
-      console.log('Body bones found:', Object.keys(bones).map(k => `${k}: ${bones[k].node.name}`));
-      return bones;
-    }
-
     window.__rigShared__ = {
       get morphRefs(){return morphRefs;},
       get neckRestQuat(){return neckRestQuat;},
-      get headRestQuat(){return headRestQuat;},
-      get bodyBones(){return bodyBones;}
+      get headRestQuat(){return headRestQuat;}
     };
   </script>
 
-  <!-- MediaPipe Face, Pose, and Hand Tracking -->
+  <!-- MediaPipe FaceLandmarker with native blendshapes -->
   <script type="module">
-    import { FaceLandmarker, PoseLandmarker, HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+    import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
     
     const video = document.getElementById('video');
     const overlay = document.getElementById('overlay');
     const ctx = overlay.getContext('2d');
     const statusEl = document.getElementById('status');
 
-    let faceLandmarker, poseLandmarker, handLandmarker;
+    let faceLandmarker;
     let lastVideoTime = -1;
 
     // Smoothing for blendshapes and rotation
@@ -398,103 +288,9 @@
       return qNormalize({x:qx, y:qy, z:qz, w:qw});
     }
 
-    // Calculate quaternion rotation between two direction vectors
-    function quatBetweenVectors(fromDir, toDir) {
-      // Normalize input vectors
-      const len1 = Math.sqrt(fromDir.x*fromDir.x + fromDir.y*fromDir.y + fromDir.z*fromDir.z);
-      const len2 = Math.sqrt(toDir.x*toDir.x + toDir.y*toDir.y + toDir.z*toDir.z);
-      
-      if (len1 < 0.0001 || len2 < 0.0001) return {x:0, y:0, z:0, w:1};
-      
-      const v1x = fromDir.x/len1, v1y = fromDir.y/len1, v1z = fromDir.z/len1;
-      const v2x = toDir.x/len2, v2y = toDir.y/len2, v2z = toDir.z/len2;
-      
-      const dot = v1x*v2x + v1y*v2y + v1z*v2z;
-      
-      // Vectors are parallel
-      if (dot > 0.999999) return {x:0, y:0, z:0, w:1};
-      
-      // Vectors are opposite
-      if (dot < -0.999999) {
-        // Find perpendicular axis
-        let perpX = 1, perpY = 0, perpZ = 0;
-        if (Math.abs(v1x) > 0.9) {
-          perpX = 0; perpY = 1;
-        }
-        return {x: perpX, y: perpY, z: perpZ, w: 0};
-      }
-      
-      // Cross product for rotation axis
-      const axisX = v1y*v2z - v1z*v2y;
-      const axisY = v1z*v2x - v1x*v2z;
-      const axisZ = v1x*v2y - v1y*v2x;
-      
-      const s = Math.sqrt((1 + dot) * 2);
-      const invS = 1 / s;
-      
-      return qNormalize({
-        x: axisX * invS,
-        y: axisY * invS,
-        z: axisZ * invS,
-        w: s * 0.5
-      });
-    }
-
-    // Smoothing filters for body bones
-    const boneRotationFilters = {};
-
-    function applyPoseTracking(poseLandmarks) {
-      const shared = window.__rigShared__;
-      if (!poseLandmarks || !shared?.bodyBones) return;
-      
-      const bones = shared.bodyBones;
-      const lm = poseLandmarks;
-      
-      // MediaPipe Pose Landmark indices:
-      // 11,12: shoulders | 13,14: elbows | 15,16: wrists | 23,24: hips | 25,26: knees | 27,28: ankles
-      
-      // Helper to apply bone rotation from landmarks
-      const applyBoneRotation = (bone, fromLm, toLm, filterKey) => {
-        if (!bone || !bone.restDir || !fromLm || !toLm) return;
-        
-        // Calculate current direction from landmarks
-        const liveDir = {
-          x: toLm.x - fromLm.x,
-          y: toLm.y - fromLm.y,
-          z: toLm.z - fromLm.z
-        };
-        
-        // Calculate rotation from rest direction to live direction
-        const deltaRot = quatBetweenVectors(bone.restDir, liveDir);
-        
-        // Apply smoothing
-        if (!boneRotationFilters[filterKey]) boneRotationFilters[filterKey] = {q: deltaRot};
-        boneRotationFilters[filterKey].q = qSlerp(boneRotationFilters[filterKey].q, deltaRot, 0.3);
-        
-        // Apply to bone: delta * rest (apply rest first, then delta)
-        const final = qMultiply(boneRotationFilters[filterKey].q, bone.rest);
-        bone.node.quaternion.copy(final);
-      };
-      
-      // Apply rotations to all bones
-      applyBoneRotation(bones.leftUpperArm, lm[11], lm[13], 'leftUpperArm');
-      applyBoneRotation(bones.rightUpperArm, lm[12], lm[14], 'rightUpperArm');
-      applyBoneRotation(bones.leftLowerArm, lm[13], lm[15], 'leftLowerArm');
-      applyBoneRotation(bones.rightLowerArm, lm[14], lm[16], 'rightLowerArm');
-      applyBoneRotation(bones.leftUpperLeg, lm[23], lm[25], 'leftUpperLeg');
-      applyBoneRotation(bones.rightUpperLeg, lm[24], lm[26], 'rightUpperLeg');
-      applyBoneRotation(bones.leftLowerLeg, lm[25], lm[27], 'leftLowerLeg');
-      applyBoneRotation(bones.rightLowerLeg, lm[26], lm[28], 'rightLowerLeg');
-    }
-
-    function applyTracking(blendshapes, transformMatrix, poseLandmarks, handLandmarks) {
+    function applyTracking(blendshapes, transformMatrix) {
       const shared = window.__rigShared__;
       if(!shared?.morphRefs) return;
-
-      // Apply pose tracking to body bones
-      if (poseLandmarks) {
-        applyPoseTracking(poseLandmarks);
-      }
 
       // Apply head/neck rotation from transformation matrix
       if(transformMatrix && transformMatrix.data) {
@@ -619,50 +415,23 @@
 
     async function boot(){
       try {
-        // Initialize MediaPipe models
-        statusEl.textContent = 'Loading MediaPipe models (Face, Pose, Hands)...';
+        // Initialize MediaPipe FaceLandmarker
+        statusEl.textContent = 'Loading MediaPipe FaceLandmarker...';
         const filesetResolver = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
 
-        // Face Landmarker
         faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
           baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
             delegate: "GPU"
           },
-          outputFaceBlendshapes: true,
-          outputFacialTransformationMatrixes: true,
+          outputFaceBlendshapes: true,  // Enable native ARKit blendshapes!
+          outputFacialTransformationMatrixes: true,  // Enable transformation matrix for head pose
           runningMode: "VIDEO",
           numFaces: 1,
           minFaceDetectionConfidence: 0.5,
           minFacePresenceConfidence: 0.5,
-          minTrackingConfidence: 0.5
-        });
-
-        // Pose Landmarker
-        poseLandmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
-          baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-            delegate: "GPU"
-          },
-          runningMode: "VIDEO",
-          numPoses: 1,
-          minPoseDetectionConfidence: 0.5,
-          minPosePresenceConfidence: 0.5,
-          minTrackingConfidence: 0.5
-        });
-
-        // Hand Landmarker
-        handLandmarker = await HandLandmarker.createFromOptions(filesetResolver, {
-          baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-            delegate: "GPU"
-          },
-          runningMode: "VIDEO",
-          numHands: 2,
-          minHandDetectionConfidence: 0.5,
-          minHandPresenceConfidence: 0.5,
           minTrackingConfidence: 0.5
         });
 
@@ -683,38 +452,30 @@
         video.addEventListener('loadedmetadata', syncOverlay);
         new ResizeObserver(syncOverlay).observe(document.getElementById('camWrap'));
 
-        // Start detection loop for all trackers
-        function detectAll() {
+        // Start detection loop
+        function detectFace() {
           const nowInMs = Date.now();
           
           if (video.currentTime !== lastVideoTime) {
             lastVideoTime = video.currentTime;
             
-            // Face tracking (use base timestamp)
-            const faceResults = faceLandmarker.detectForVideo(video, nowInMs);
-            if(faceResults.faceLandmarks && faceResults.faceLandmarks[0]) {
-              drawLandmarks(faceResults.faceLandmarks[0]);
+            const results = faceLandmarker.detectForVideo(video, nowInMs);
+            
+            if(results.faceLandmarks && results.faceLandmarks[0]) {
+              drawLandmarks(results.faceLandmarks[0]);
             }
-            const blendshapes = faceResults.faceBlendshapes?.[0]?.categories;
-            const transformMatrix = faceResults.facialTransformationMatrixes?.[0];
+
+            const blendshapes = results.faceBlendshapes?.[0]?.categories;
+            const transformMatrix = results.facialTransformationMatrixes?.[0];
             
-            // Pose tracking (add 1ms offset to avoid timestamp conflict)
-            const poseResults = poseLandmarker.detectForVideo(video, nowInMs + 1);
-            const poseLandmarks = poseResults.landmarks?.[0];
-            
-            // Hand tracking (add 2ms offset to avoid timestamp conflict)
-            const handResults = handLandmarker.detectForVideo(video, nowInMs + 2);
-            const handLandmarks = handResults.landmarks || [];
-            
-            // Apply all tracking data
-            applyTracking(blendshapes, transformMatrix, poseLandmarks, handLandmarks);
+            applyTracking(blendshapes, transformMatrix);
           }
           
-          requestAnimationFrame(detectAll);
+          requestAnimationFrame(detectFace);
         }
 
-        detectAll();
-        statusEl.textContent = '✨ Full body tracking active! (Face, Pose, Hands)';
+        detectFace();
+        statusEl.textContent = '✨ Tracking with native 52 ARKit blendshapes!';
       } catch(err) {
         console.error('Boot error:', err);
         statusEl.innerHTML = `<span class="err">Failed to initialize: ${err.message}</span>`;
