@@ -16,8 +16,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+# Enable socket reuse before creating the server
+socketserver.TCPServer.allow_reuse_address = True
+
 with socketserver.TCPServer((HOST, PORT), MyHTTPRequestHandler) as httpd:
-    httpd.allow_reuse_address = True
     print(f"Server running at http://{HOST}:{PORT}/")
     print("Press Ctrl+C to stop the server")
     httpd.serve_forever()

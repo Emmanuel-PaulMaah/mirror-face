@@ -139,6 +139,13 @@ python server.py
 Server runs on `http://0.0.0.0:5000` (required for Replit environment)
 
 ## Recent Changes
+- **2025-10-23 (v4)**: **MOBILE-RESPONSIVE + DEPLOYMENT** 
+  - Added mobile-responsive CSS with media queries (@768px, @480px breakpoints)
+  - Layout automatically stacks on small screens (50vh/40vh 3D view, scrollable controls)
+  - Added demo avatar button - users can instantly try the app without uploading models
+  - Created comprehensive GitHub Pages deployment guide (DEPLOY.md)
+  - Fixed server.py socket reuse issue for better workflow stability
+  - Corrected MediaPipe import URL from `/wasm` to `@0.10.14` package entry point
 - **2025-10-23 (v3)**: **PRODUCTION-READY** - Fixed undefined overlay bug, verified all systems operational
 - **2025-10-23 (v2)**: **MAJOR REWRITE** - Switched to MediaPipe FaceLandmarker with native ARKit blendshapes
   - Replaced manual landmark math with MediaPipe's trained neural network

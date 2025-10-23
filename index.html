@@ -18,6 +18,41 @@
     .err{color:#e37b7b}
     .info{font-size:12px;color:#888;margin-top:8px}
     label{display:block;margin-top:8px;font-weight:600;font-size:12px}
+    button{
+      background:#2563eb;color:#fff;border:none;padding:10px 16px;
+      border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;
+      margin-top:8px;width:100%;transition:background 0.2s
+    }
+    button:hover{background:#1d4ed8}
+    button:active{background:#1e40af}
+    
+    /* Mobile responsive layout */
+    @media (max-width: 768px) {
+      .app{
+        grid-template-columns:1fr;
+        grid-template-rows:50vh auto;
+      }
+      .sidebar{
+        grid-template-rows:auto auto;
+        max-height:50vh;
+      }
+      #camWrap{
+        max-height:200px;
+      }
+      #morphKeys{
+        max-height:60px;
+        font-size:10px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      html,body{font:12px system-ui}
+      .app{grid-template-rows:40vh auto}
+      #ui{padding:8px}
+      button{padding:8px 12px;font-size:12px}
+      label{font-size:11px}
+      .info{font-size:11px}
+    }
   </style>
 </head>
 <body>
@@ -29,7 +64,8 @@
     <div class="sidebar">
       <div id="ui">
         <div><b>MediaPipe ARKit Tracking</b></div>
-        <label>Upload GLB/GLTF (with morph targets)</label>
+        <button id="demoBtn">Load Demo Avatar</button>
+        <label>Or upload your own GLB/GLTF</label>
         <input type="file" id="file" accept=".glb,.gltf" />
         <label>Detected morph target keys</label>
         <div id="morphKeys"></div>
@@ -131,10 +167,9 @@
     // Store original bone rotations (rest pose)
     let neckRestQuat = null, headRestQuat = null;
 
-    document.getElementById('file').addEventListener('change', async (e)=>{
-      const file = e.target.files?.[0]; if(!file) return;
+    // Shared model loading function
+    async function loadModel(url, shouldRevoke = true) {
       statusEl.textContent = 'Loading model…';
-      const url = URL.createObjectURL(file);
       try{
         const gltf = await gltfLoader.loadAsync(url);
         gltf.scene.position.set(0,-1,0);
@@ -194,7 +229,21 @@
         console.error(err); 
         statusEl.innerHTML = '<span class="err">Model load failed.</span>'; 
       }
-      finally{ URL.revokeObjectURL(url); }
+      finally{ 
+        if(shouldRevoke) URL.revokeObjectURL(url); 
+      }
+    }
+
+    // Demo button handler
+    document.getElementById('demoBtn').addEventListener('click', async ()=>{
+      await loadModel('demo-avatar.glb', false);
+    });
+
+    // File upload handler
+    document.getElementById('file').addEventListener('change', async (e)=>{
+      const file = e.target.files?.[0]; if(!file) return;
+      const url = URL.createObjectURL(file);
+      await loadModel(url, true);
     });
 
     window.__rigShared__ = {
