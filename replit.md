@@ -176,6 +176,10 @@ python server.py
 Server runs on `http://0.0.0.0:5000` (required for Replit environment)
 
 ## Recent Changes
+- **2025-10-23 (v4.1)**: **FIXED TIMESTAMP CONFLICTS** - Resolved MediaPipe stream conflicts
+  - Added millisecond offsets to each tracker (Face: +0ms, Pose: +1ms, Hands: +2ms)
+  - Fixed "Packet timestamp mismatch" errors that stopped all tracking
+  - All three trackers now run smoothly without stream conflicts
 - **2025-10-23 (v4)**: **FULL BODY TRACKING** - Added MediaPipe Pose and Hand tracking
   - Integrated PoseLandmarker for 33 body landmarks (arms, legs, torso)
   - Integrated HandLandmarker for 21 landmarks per hand × 2 hands
