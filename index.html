@@ -690,7 +690,7 @@
           if (video.currentTime !== lastVideoTime) {
             lastVideoTime = video.currentTime;
             
-            // Face tracking
+            // Face tracking (use base timestamp)
             const faceResults = faceLandmarker.detectForVideo(video, nowInMs);
             if(faceResults.faceLandmarks && faceResults.faceLandmarks[0]) {
               drawLandmarks(faceResults.faceLandmarks[0]);
@@ -698,12 +698,12 @@
             const blendshapes = faceResults.faceBlendshapes?.[0]?.categories;
             const transformMatrix = faceResults.facialTransformationMatrixes?.[0];
             
-            // Pose tracking
-            const poseResults = poseLandmarker.detectForVideo(video, nowInMs);
+            // Pose tracking (add 1ms offset to avoid timestamp conflict)
+            const poseResults = poseLandmarker.detectForVideo(video, nowInMs + 1);
             const poseLandmarks = poseResults.landmarks?.[0];
             
-            // Hand tracking
-            const handResults = handLandmarker.detectForVideo(video, nowInMs);
+            // Hand tracking (add 2ms offset to avoid timestamp conflict)
+            const handResults = handLandmarker.detectForVideo(video, nowInMs + 2);
             const handLandmarks = handResults.landmarks || [];
             
             // Apply all tracking data
