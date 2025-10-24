@@ -1,53 +1,57 @@
 # mirror-face
 
-A real-time face-tracking web application that uses MediaPipe Face Mesh to animate 3D models with your facial expressions.
+real-time face-tracking web app that uses mediapipe face mesh to animate human 3d models with your facial expressions. 
 
-## Features
+upload your model, enter model url or load demo model.
 
-- **Real-time Face Tracking**: Uses your webcam and MediaPipe Face Mesh to track facial movements
-- **3D Model Support**: Upload GLB/GLTF files with morph targets
-- **Automatic Mapping**: Automatically detects and maps facial features to morph targets
-- **Custom Mapping**: Manually configure morph target mappings for your specific model
-- **Head Pose Tracking**: Smooth head rotation using quaternion interpolation
-- **Expression Support**: Tracks jaw open, eye blinks, smiles, and more
+[use mirror-face](https://emmanuel-paulmaah.github.io/mirror-face/)
 
-## How to Use
+## features
 
-1. **Start the Application**: The app loads with a 3D viewport on the left and controls on the right
-2. **Upload a 3D Model**: Click "Choose File" to upload a GLB or GLTF file with morph targets
-3. **Allow Webcam Access**: Grant permission when prompted to enable face tracking
-4. **Customize Mapping** (optional): Adjust the morph target mappings in the text fields if needed
-5. **Animate**: Move your head and make facial expressions to see your 3D model animate in real-time!
+- **real-time Face Tracking**: uses your webcam and MediaPipe Face Mesh to track facial movements
+- **3d model support**: upload glb/gltf files with morph targets
+- **automatic mapping**: automatically detects & maps facial features to morph targets
+- **custom mapping**: manually configure morph target mappings for your specific model
+- **head pose tracking**: smooth head rotation using quaternion interpolation
+- **expression support**: tracks jaw open, eye blinks, smiles, & more
 
-## Supported Morph Targets
+## how to use
 
-The app automatically maps to common morph target names:
-- Jaw/mouth open
-- Eye blinks (left/right)
-- Smiles
-- Mouth funnel/pucker
-- Cheek puff
-- And more...
+1. **start the app**: the app loads with a 3d viewport on the left & controls on the right
+2. **upload a 3d model**: click "choose file" to upload a glb or gltf file with morph targets
+3. **allow webcam access**: grant permission when prompted to enable face tracking
+4. **customize mapping** (optional): adjust the morph target mappings in the text fields if needed
+5. **animate**: Move your head and make facial expressions to see your 3D model animate in real-time!
 
-## Technical Details
+## supported morph targets
 
-- **Framework**: Three.js for 3D rendering
-- **Face Tracking**: MediaPipe Face Mesh
-- **No Build Required**: Pure HTML/JavaScript, dependencies loaded from CDNs
-- **WebGL Required**: Needs a browser with WebGL support
+the app automatically maps to common morph target names:
+- jaw/mouth open
+- eye blinks (left/right)
+- smiles
+- mouth funnel/pucker
+- cheek puff
+- & more...
 
-## Requirements
+## technical Details
 
-- Modern web browser with WebGL support
-- Webcam access
-- HTTPS or localhost (required for webcam permissions)
+- **framework**: three.js for 3d rendering
+- **face tracking**: mediapipe face mesh
+- **no build required**: pure html/javascript, dependencies loaded from cdn
+- **webgl required**: needs a browser with webgl support
 
-## Development
+## requirements
 
-The application runs on a simple Python HTTP server:
+- modern web browser with WebGL support
+- webcam access
+- https or localhost (required for webcam permissions)
+
+## development
+
+app runs on a simple python http server:
 
 ```bash
 python server.py
 ```
 
-Server runs on port 5000 by default.
+server runs on port 5000 by default.
