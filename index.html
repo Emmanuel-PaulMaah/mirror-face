@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Face → MorphTargets (Native ARKit Blendshapes)</title>
+  <title>mirror face</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html,body{margin:0;height:100%;background:#111;color:#ddd;font:14px system-ui}
@@ -63,17 +63,18 @@
 
     <div class="sidebar">
       <div id="ui">
-        <div><b>MediaPipe ARKit Tracking</b></div>
-        <button id="demoBtn">Load Demo Avatar</button>
-        <label>Or load from URL</label>
+        <div><b>mirror face</b></div>
+        <button id="demoBtn">load demo avatar</button>
+        <label>or load from url</label>
         <input type="text" id="urlInput" placeholder="https://example.com/model.glb" style="width:100%;padding:8px;background:#0f0f0f;border:1px solid #333;color:#ddd;border-radius:6px;font-size:13px" />
-        <button id="urlBtn">Load from URL</button>
-        <label>Or upload your own GLB/GLTF</label>
+        <button id="urlBtn">load from url</button>
+        <label>or upload your own model (glb/gltf)</label>
         <input type="file" id="file" accept=".glb,.gltf" />
-        <label>Detected morph target keys</label>
+        <label>detected morph target keys</label>
         <div id="morphKeys"></div>
-        <div class="info">✨ Using MediaPipe's native 52 ARKit blendshapes + proper neck/head hierarchy!</div>
-        <div id="status">Waiting for model…</div>
+        <div class="info">using mediapipe's native 52 arkit blendshapes + proper neck/head hierarchy!</div>
+        <div id="status">waiting for model…</div>
+        <button> <a href="https://github.com/Emmanuel-PaulMaah/mirror-face/tree/main">docs</a></button>
       </div>
 
       <div id="camWrap">
